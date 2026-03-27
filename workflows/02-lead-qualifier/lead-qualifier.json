@@ -1,0 +1,357 @@
+{
+  "name": "Lead Qualifier",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "69cb0924-3052-4a4b-be36-313adf785fc7",
+      "name": "Telegram Trigger",
+      "webhookId": "82bb05d3-c2c6-44a2-a247-fe90a3c23beb",
+      "credentials": {
+        "telegramApi": {
+          "id": "w2YuD8rfbTMrcA8h",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2e180efe-f266-4903-9d63-e9dd3ce6f1ce",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "/qualify",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "5b7cc83c-c116-49ed-84bb-e6ed9b9aab15",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Зроби коротке резюме цього тексту в 3-5 реченнях: {{ $json.message.text }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        96
+      ],
+      "id": "602350fa-59f3-4063-a381-ebf1f5728700",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "wc1qDEnSGQybBGUk",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output[0].content[0].text }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        768,
+        96
+      ],
+      "id": "0f4509f9-4bd3-4123-825a-77b3aed0e123",
+      "name": "Send a text message",
+      "webhookId": "407f14d2-c229-4173-a5c3-a9faa2fc523e",
+      "credentials": {
+        "telegramApi": {
+          "id": "w2YuD8rfbTMrcA8h",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "=user",
+              "content": "{{ $('Telegram Trigger').item.json.message.text.replace('/qualify ', '') }}"
+            },
+            {
+              "role": "system",
+              "content": "You are a lead qualification assistant. Analyze the incoming message and extract key information.\nDo not wrap the response in markdown code blocks. Return raw JSON only\nRespond ONLY in this JSON format, no other text:\n{\n  \"service\": \"what service they need\",\n  \"budget\": \"budget if mentioned, otherwise unknown\",\n  \"temperature\": \"hot/warm/cold\",\n  \"summary\": \"brief 1-2 sentence summary\"\n}\n\nTemperature rules:\n- hot: ready to start, has budget, urgent\n- warm: interested but not urgent\n- cold: just exploring\n\n\"service\": \"extract the main IT service: must be one of: MikroTik, VPN, FortiGate, WiFi, firewall, Proxmox, cybersecurity, server setup, IT consulting. If unclear - write your best guess, never write unknown\""
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        -96
+      ],
+      "id": "77d5bffd-53df-492d-8913-d8912b4f43fc",
+      "name": "Message a model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "wc1qDEnSGQybBGUk",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "✅ Дякуємо! Ваш запит прийнято. Ми зв'яжемось з вами найближчим часом.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        768,
+        -96
+      ],
+      "id": "64deb332-7863-425b-80d1-7ed5685d59dd",
+      "name": "Send a text message1",
+      "webhookId": "acd2d7d2-657f-4cc0-864d-b810e3133f39",
+      "credentials": {
+        "telegramApi": {
+          "id": "w2YuD8rfbTMrcA8h",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1AOxz4uQzMu-1PhoiOM1QVzcZoAKtdOgDvHPGnvzwgt8",
+          "mode": "list",
+          "cachedResultName": "Lead Qualifier",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AOxz4uQzMu-1PhoiOM1QVzcZoAKtdOgDvHPGnvzwgt8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AOxz4uQzMu-1PhoiOM1QVzcZoAKtdOgDvHPGnvzwgt8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ new Date().toISOString() }}",
+            "Name": "={{ $('Telegram Trigger').item.json.message.from.first_name }}",
+            "Message": "={{ $('Telegram Trigger').item.json.message.text.replace('/qualify ', '') }}",
+            "Service": "={{ JSON.parse($('Message a model1').item.json.output[0].content[0].text.replace(/```json\\n?/g, '').replace(/```/g, '').trim()).service }}",
+            "Temperature": "={{ JSON.parse($('Message a model1').item.json.output[0].content[0].text.replace(/```json\\n?/g, '').replace(/```/g, '').trim()).temperature }}",
+            "Summary": "={{ JSON.parse($('Message a model1').item.json.output[0].content[0].text.replace(/```json\\n?/g, '').replace(/```/g, '').trim()).summary }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Service",
+              "displayName": "Service",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Temperature",
+              "displayName": "Temperature",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        976,
+        -96
+      ],
+      "id": "7530f88a-8065-43fb-b544-ad2fe18d062f",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hi2nlEqQHXNIEOC7",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "afa63f65-5833-4fac-a15c-e52eca06f4bf",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d308cd0906ec7e946c55be66f98a5caa3baa101e6444827b28e4c5d8facb5437"
+  },
+  "id": "5GrMylY5HZ6JaZNR",
+  "tags": []
+}
